@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>DiagnosIA Rim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: ficha de triagem renal — histórico e exames à esquerda, laudo da IA à direita, desempenho e limiar abaixo */
+:root{
+  --bg:#f3f5f6; --panel:#ffffff; --ink:#18242b; --muted:#5b6a72; --line:#d9e0e3;
+  --accent:#1f5f7a; --accent-soft:#e1edf2;
+  --ok:#2e7d5b; --ok-soft:#e3f2ea; --risk:#b3392f; --risk-soft:#f8e4e1; --warn:#a86a12;
+  --f-display:"Newsreader",Georgia,serif; --f-body:"Instrument Sans",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11181c; --panel:#182227; --ink:#e4ebee; --muted:#93a4ac; --line:#2a383f;
+  --accent:#6fb3cf; --accent-soft:#1d3440; --ok:#5cc495; --ok-soft:#173327; --risk:#ef7e72; --risk-soft:#3b1f1c; --warn:#e0a54a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11181c; --panel:#182227; --ink:#e4ebee; --muted:#93a4ac; --line:#2a383f;
+  --accent:#6fb3cf; --accent-soft:#1d3440; --ok:#5cc495; --ok-soft:#173327; --risk:#ef7e72; --risk-soft:#3b1f1c; --warn:#e0a54a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:24px 48px}
+.wrap{max-width:1160px;margin:0 auto;display:grid;gap:20px}
+header{display:grid;gap:6px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:var(--f-display);font-weight:600;font-size:clamp(28px,4vw,40px);line-height:1.1;margin:0;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0;text-wrap:balance}
+h3{font-size:13px;font-family:var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:500}
+.lede{color:var(--muted);max-width:72ch;margin:0}
+.grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;gap:16px;min-width:0}
+.sticky{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media (max-width:860px){.sticky{position:static}}
+.cases{display:flex;flex-wrap:wrap;gap:8px}
+.cases button{font:500 13px var(--f-body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
+.cases button[aria-pressed="true"]{background:var(--accent);color:var(--panel);border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.group{display:grid;gap:12px;padding-top:12px;border-top:1px solid var(--line)}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 20px}
+@media (max-width:560px){.fields{grid-template-columns:1fr}}
+.f{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;min-width:0}
+.f label{font-weight:500;font-size:14px}
+.f output{font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums}
+.f input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--accent)}
+.f select{grid-column:1/-1;width:100%;font:14px var(--f-body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+.seg{grid-column:1/-1;display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{flex:1;font:500 13px var(--f-body);background:var(--bg);color:var(--ink);border:0;padding:6px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--panel)}
+.verdict{border-radius:8px;padding:16px;display:grid;gap:4px}
+.verdict.b{background:var(--ok-soft)} .verdict.m{background:var(--risk-soft)}
+.verdict .lab{font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.verdict .big{font-family:var(--f-display);font-size:30px;font-weight:600;line-height:1.15}
+.verdict.b .big{color:var(--ok)} .verdict.m .big{color:var(--risk)}
+.meter{height:10px;border-radius:5px;position:relative;background:var(--line)}
+.meter .zone{position:absolute;top:0;bottom:0;right:0;background:var(--risk);border-radius:0 5px 5px 0;opacity:.85}
+.meter .zoneb{position:absolute;top:0;bottom:0;left:0;background:var(--ok);border-radius:5px 0 0 5px;opacity:.85}
+.meter i{position:absolute;top:-5px;width:4px;height:20px;background:var(--ink);border-radius:2px;transform:translateX(-2px);transition:left .25s}
+.scale{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.contrib{display:grid;gap:6px}
+.crow{display:grid;grid-template-columns:150px minmax(0,1fr) 52px;gap:8px;align-items:center;font-size:13px}
+@media (max-width:420px){.crow{grid-template-columns:110px minmax(0,1fr) 46px}}
+.ctrack{position:relative;height:12px;background:var(--bg);border-radius:3px}
+.ctrack::before{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--muted)}
+.cbar{position:absolute;top:0;height:12px;border-radius:2px}
+.cval{font-family:var(--f-mono);font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
+.note{font-size:13px;color:var(--muted);margin:0}
+.thr{display:grid;gap:6px}
+.thr input{width:100%;accent-color:var(--accent)}
+.thr .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.thr b{font-family:var(--f-mono);font-weight:500}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.m{border-top:2px solid var(--accent);padding-top:8px}
+.m b{display:block;font-family:var(--f-mono);font-size:24px;font-weight:500;font-variant-numeric:tabular-nums}
+.m span{font-size:13px;color:var(--muted)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:700px){.two{grid-template-columns:1fr}}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:center}
+th{font-weight:600;background:var(--bg)}
+td.hit{background:var(--ok-soft)} td.miss{background:var(--risk-soft)}
+.disclaimer{border-left:3px solid var(--warn);padding:10px 14px;background:var(--panel);font-size:13px;color:var(--muted);margin:0}
+@media (prefers-reduced-motion:reduce){.meter i{transition:none}}
+.f.off{opacity:.45}
+.f .tag{font-family:var(--f-mono);font-size:11px;color:var(--warn);margin-left:6px;font-weight:400}
+.modelbox{display:grid;gap:8px}
+.compare{font-size:13px;color:var(--muted);margin:0}
+.compare b{font-family:var(--f-mono);font-weight:500;color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="eyebrow">Protótipo acadêmico · apoio à decisão clínica</span>
+  <h1>DiagnosIA Rim: triagem de doença renal crônica</h1>
+  <p class="lede">Dois modelos de regressão logística treinados com 400 pacientes de um hospital da Índia estimam a probabilidade de doença renal crônica (DRC). O modelo completo usa 24 dados, incluindo exames de função renal e de urina. O modelo de triagem usa só 13 dados de consulta e hemograma, para apontar quem deveria fazer esses exames. Escolha um paciente de teste ou altere os dados.</p>
+</header>
+
+<div class="grid">
+  <section class="panel" aria-labelledby="h-in">
+    <h2 id="h-in">Dados do paciente</h2>
+    <div class="cases" id="cases" role="group" aria-label="Pacientes de teste"></div>
+    <p class="note" id="caseinfo"></p>
+    <div class="group"><h3>Perfil e histórico</h3><div class="fields" id="g1"></div></div>
+    <div class="group"><h3>Sangue: hemograma e glicemia</h3><div class="fields" id="g2"></div></div>
+    <div class="group"><h3>Sangue: função renal</h3><div class="fields" id="g3"></div></div>
+    <div class="group"><h3>Exame de urina</h3><div class="fields" id="g4"></div></div>
+  </section>
+
+  <section class="panel sticky" aria-labelledby="h-out" aria-live="polite">
+    <h2 id="h-out">Laudo da IA</h2>
+    <div class="modelbox">
+      <span class="note">Modelo</span>
+      <div class="seg" role="group" aria-label="Modelo">
+        <button type="button" id="m_completo" data-m="completo">Completo (24 dados)</button>
+        <button type="button" id="m_triagem" data-m="triagem">Triagem (13 dados)</button>
+      </div>
+    </div>
+    <div class="verdict" id="verdict">
+      <span class="lab">Probabilidade de doença renal crônica</span>
+      <span class="big" id="prob">–</span>
+      <span id="vtext"></span>
+    </div>
+    <div>
+      <div class="meter"><span class="zoneb" id="zb"></span><span class="zone" id="zr"></span><i id="needle"></i></div>
+      <div class="scale"><span>0%</span><span id="thrlab">limiar 50%</span><span>100%</span></div>
+    </div>
+    <p class="compare" id="compare"></p>
+    <h2 style="font-size:17px">Por que o modelo decidiu assim</h2>
+    <p class="note">Quanto cada dado afasta este paciente da média da base (escala log-odds). Barras à direita aumentam o risco; à esquerda, diminuem. Mostrando os 10 dados de maior peso.</p>
+    <div class="contrib" id="contrib"></div>
+  </section>
+</div>
+
+<section class="panel" aria-labelledby="h-perf">
+  <h2 id="h-perf">Desempenho no conjunto de teste</h2>
+  <p class="note" id="perfnote"></p>
+  <div class="thr">
+    <div class="row"><label for="thr">Limiar de decisão</label><b id="thrval">50%</b></div>
+    <input type="range" id="thr" min="10" max="90" step="5" value="50">
+    <p class="note">Baixar o limiar faz a IA sinalizar mais pacientes: detecta mais doentes (sensibilidade sobe) à custa de mais alarmes falsos (especificidade cai). Na triagem, perder um doente costuma ser o erro mais grave.</p>
+  </div>
+  <div class="metrics" id="metrics"></div>
+  <div class="two">
+    <div style="overflow-x:auto">
+      <table aria-label="Matriz de confusão">
+        <tr><th></th><th>IA: sem DRC</th><th>IA: com DRC</th></tr>
+        <tr><th>Real: sem DRC</th><td class="hit" id="tn"></td><td class="miss" id="fp"></td></tr>
+        <tr><th>Real: com DRC</th><td class="miss" id="fn"></td><td class="hit" id="tp"></td></tr>
+      </table>
+    </div>
+    <p class="note" id="cvnote"></p>
+  </div>
+</section>
+
+<p class="disclaimer">Protótipo para fins educacionais. Não é um dispositivo médico regularizado (RDC Anvisa nº 657/2022) e não substitui avaliação médica. Dados: Chronic Kidney Disease, UCI Machine Learning Repository, coletados em 2015 no Apollo Hospitals (Tamil Nadu, Índia) e anonimizados. Valores marcados como "estimado" estavam ausentes no prontuário e foram preenchidos com a mediana (ou o valor mais comum) dos pacientes de treino.</p>
+</div>
+
+<script>
+const D = {"models": {"completo": {"vars": ["age", "bp", "sg", "al", "su", "rbc", "pc", "pcc", "ba", "bgr", "bu", "sc", "sod", "pot", "hemo", "pcv", "wbcc", "rbcc", "htn", "dm", "cad", "appet", "pe", "ane"], "fill": {"age": 54.0, "bp": 80.0, "sg": 1.02, "al": 0.0, "su": 0.0, "rbc": 0.0, "pc": 0.0, "pcc": 0.0, "ba": 0.0, "bgr": 120.0, "bu": 44.0, "sc": 1.3, "sod": 138.0, "pot": 4.3, "hemo": 12.6, "pcv": 40.0, "wbcc": 8000.0, "rbcc": 4.8, "htn": 0.0, "dm": 0.0, "cad": 0.0, "appet": 0.0, "pe": 0.0, "ane": 0.0}, "mean": {"age": 51.84285714285714, "bp": 76.85714285714286, "sg": 1.0175892857142856, "al": 0.8714285714285714, "su": 0.3535714285714286, "rbc": 0.10357142857142858, "pc": 0.19285714285714287, "pcc": 0.125, "ba": 0.06428571428571428, "bgr": 141.71428571428572, "bu": 57.837857142857146, "sc": 3.195, "sod": 137.16964285714286, "pot": 4.330357142857143, "hemo": 12.49357142857143, "pcv": 38.85357142857143, "wbcc": 8314.642857142857, "rbcc": 4.736071428571428, "htn": 0.37857142857142856, "dm": 0.32857142857142857, "cad": 0.08571428571428572, "appet": 0.19285714285714287, "pe": 0.17857142857142858, "ane": 0.16428571428571428}, "scale": {"age": 16.261818308352776, "bp": 14.272136404582897, "sg": 0.0053444790796347, "al": 1.297485794818233, "su": 0.978330262253405, "rbc": 0.3047037704970223, "pc": 0.3945418422754708, "pcc": 0.33071891388307384, "ba": 0.24526121019127706, "bgr": 71.11723577649651, "bu": 48.43324930525832, "sc": 6.188564627024359, "sod": 10.124614977562235, "pot": 0.6643793136823118, "hemo": 2.7676501305074597, "pcv": 8.256382039837735, "wbcc": 2710.936820340443, "rbcc": 0.8529898646429942, "htn": 0.4850310320389989, "dm": 0.4696937777935314, "cad": 0.27994168488950605, "appet": 0.3945418422754708, "pe": 0.3829930462415574, "ane": 0.3705346385526554}, "coef": {"age": -0.1616084687160091, "bp": 0.6197821574957361, "sg": -1.7048988248297634, "al": 0.8138046289742962, "su": 0.6509882980939081, "rbc": 0.47256726837879603, "pc": 0.3695014312470331, "pcc": 0.13300913732845882, "ba": 0.06889513709124859, "bgr": 0.48695930422016076, "bu": 0.5002353031903397, "sc": 0.8680147552395575, "sod": -0.20667921707070885, "pot": -0.13657100749074821, "hemo": -1.5947311263037727, "pcv": -1.2687199258107988, "wbcc": 0.03679954636596556, "rbcc": -0.6726975266686506, "htn": 1.0253132711519213, "dm": 1.0487800065966544, "cad": -0.007890951358513882, "appet": 0.9013581464682763, "pe": 0.37272001436943825, "ane": 0.2125243972240786}, "intercept": 4.638678072176217, "metrics": {"acc": 0.9916666666666667, "sens": 0.9866666666666667, "spec": 1.0, "ppv": 1.0, "auc": 1.0, "cv_auc_mean": 1.0, "cv_auc_std": 0.0, "cv_acc_mean": 0.9892857142857142, "tp": 74, "tn": 45, "fp": 0, "fn": 1}, "test": [[1.0, 1], [0.0006, 0], [1.0, 1], [0.0504, 0], [0.9995, 1], [1.0, 1], [1.0, 1], [0.0147, 0], [0.7605, 1], [0.0587, 0], [1.0, 1], [1.0, 1], [0.001, 0], [0.9997, 1], [0.0006, 0], [0.997, 1], [1.0, 1], [0.0217, 0], [0.9992, 1], [0.9999, 1], [0.8866, 1], [0.0069, 0], [0.9096, 1], [0.9416, 1], [1.0, 1], [1.0, 1], [1.0, 1], [0.0246, 0], [1.0, 1], [0.0049, 0], [0.9746, 1], [0.6932, 1], [0.9992, 1], [0.9972, 1], [0.9221, 1], [1.0, 1], [1.0, 1], [0.0014, 0], [0.0056, 0], [0.0403, 0], [0.0044, 0], [0.0063, 0], [0.8959, 1], [0.9986, 1], [0.2075, 0], [0.0044, 0], [1.0, 1], [1.0, 1], [0.0075, 0], [0.9992, 1], [1.0, 1], [1.0, 1], [0.3849, 1], [0.2836, 0], [0.0035, 0], [1.0, 1], [0.0046, 0], [0.0004, 0], [0.9974, 1], [0.0376, 0], [0.9999, 1], [1.0, 1], [1.0, 1], [0.9988, 1], [0.9908, 1], [0.0195, 0], [0.0162, 0], [1.0, 1], [0.9973, 1], [0.9999, 1], [1.0, 1], [1.0, 1], [0.1395, 0], [0.0007, 0], [0.9809, 1], [0.0138, 0], [0.9471, 1], [0.9994, 1], [0.0046, 0], [0.001, 0], [0.9984, 1], [0.0123, 0], [0.9989, 1], [0.0819, 0], [1.0, 1], [0.998, 1], [1.0, 1], [0.0759, 0], [0.0054, 0], [0.9997, 1], [0.0175, 0], [0.0032, 0], [1.0, 1], [0.9991, 1], [0.9838, 1], [0.0203, 0], [1.0, 1], [0.0146, 0], [1.0, 1], [0.0015, 0], [0.8328, 1], [1.0, 1], [0.0333, 0], [1.0, 1], [1.0, 1], [0.9783, 1], [0.9999, 1], [0.9903, 1], [1.0, 1], [1.0, 1], [0.5099, 1], [0.0015, 0], [0.853, 1], [0.0171, 0], [0.0361, 0], [0.0427, 0], [0.9956, 1], [0.998, 1], [0.9997, 1], [0.0317, 0]]}, "triagem": {"vars": ["age", "bp", "bgr", "hemo", "pcv", "wbcc", "rbcc", "htn", "dm", "cad", "appet", "pe", "ane"], "fill": {"age": 54.0, "bp": 80.0, "bgr": 120.0, "hemo": 12.6, "pcv": 40.0, "wbcc": 8000.0, "rbcc": 4.8, "htn": 0.0, "dm": 0.0, "cad": 0.0, "appet": 0.0, "pe": 0.0, "ane": 0.0}, "mean": {"age": 51.84285714285714, "bp": 76.85714285714286, "bgr": 141.71428571428572, "hemo": 12.49357142857143, "pcv": 38.85357142857143, "wbcc": 8314.642857142857, "rbcc": 4.736071428571428, "htn": 0.37857142857142856, "dm": 0.32857142857142857, "cad": 0.08571428571428572, "appet": 0.19285714285714287, "pe": 0.17857142857142858, "ane": 0.16428571428571428}, "scale": {"age": 16.261818308352776, "bp": 14.272136404582897, "bgr": 71.11723577649651, "hemo": 2.7676501305074597, "pcv": 8.256382039837735, "wbcc": 2710.936820340443, "rbcc": 0.8529898646429942, "htn": 0.4850310320389989, "dm": 0.4696937777935314, "cad": 0.27994168488950605, "appet": 0.3945418422754708, "pe": 0.3829930462415574, "ane": 0.3705346385526554}, "coef": {"age": -0.2648235206911645, "bp": 0.8782675393900341, "bgr": 0.8076499846029387, "hemo": -2.099138792591198, "pcv": -1.7795096300392708, "wbcc": 0.444400875339312, "rbcc": -0.8601370892342418, "htn": 1.3361474257028325, "dm": 1.6782609612990367, "cad": 0.05005526863871408, "appet": 0.8696900144970376, "pe": 0.7202462251027655, "ane": 0.15427545493508374}, "intercept": 4.486466327105848, "metrics": {"acc": 0.95, "sens": 0.96, "spec": 0.9333333333333333, "ppv": 0.96, "auc": 0.9792592592592593, "cv_auc_mean": 0.9959183673469388, "cv_auc_std": 0.004215492077504686, "cv_acc_mean": 0.9714285714285713, "tp": 72, "tn": 42, "fp": 3, "fn": 3}, "test": [[1.0, 1], [0.0022, 0], [1.0, 1], [0.06, 0], [0.9992, 1], [1.0, 1], [1.0, 1], [0.0134, 0], [0.1331, 1], [0.0769, 0], [1.0, 1], [1.0, 1], [0.0031, 0], [0.9632, 1], [0.0023, 0], [0.9978, 1], [1.0, 1], [0.3634, 0], [0.9987, 1], [0.9999, 1], [0.7112, 1], [0.0084, 0], [0.9785, 1], [0.9633, 1], [1.0, 1], [1.0, 1], [1.0, 1], [0.2964, 0], [1.0, 1], [0.0459, 0], [0.9876, 1], [0.9439, 1], [0.9458, 1], [0.9989, 1], [0.8424, 1], [1.0, 1], [0.9999, 1], [0.007, 0], [0.0027, 0], [0.3676, 0], [0.0025, 0], [0.0518, 0], [0.5613, 1], [0.8815, 1], [0.5012, 0], [0.0254, 0], [1.0, 1], [1.0, 1], [0.0547, 0], [0.9739, 1], [1.0, 1], [1.0, 1], [0.0221, 1], [0.752, 0], [0.0174, 0], [1.0, 1], [0.0458, 0], [0.0009, 0], [0.9701, 1], [0.0673, 0], [1.0, 1], [1.0, 1], [1.0, 1], [0.9999, 1], [0.9344, 1], [0.0156, 0], [0.3551, 0], [1.0, 1], [0.9998, 1], [1.0, 1], [1.0, 1], [1.0, 1], [0.3505, 0], [0.0024, 0], [0.9996, 1], [0.0861, 0], [0.9964, 1], [0.6063, 1], [0.0044, 0], [0.0067, 0], [0.9943, 1], [0.0142, 0], [0.9266, 1], [0.2034, 0], [0.9989, 1], [0.9904, 1], [1.0, 1], [0.4691, 0], [0.0544, 0], [1.0, 1], [0.0208, 0], [0.011, 0], [1.0, 1], [1.0, 1], [0.695, 1], [0.0249, 0], [1.0, 1], [0.1214, 0], [1.0, 1], [0.0028, 0], [0.9615, 1], [1.0, 1], [0.0435, 0], [1.0, 1], [1.0, 1], [0.9719, 1], [0.9996, 1], [0.9998, 1], [1.0, 1], [1.0, 1], [0.8623, 1], [0.0066, 0], [0.0172, 1], [0.0282, 0], [0.3349, 0], [0.534, 0], [0.9832, 1], [0.9266, 1], [1.0, 1], [0.3562, 0]]}}, "meta": {"n": 400, "n_ckd": 250, "n_train": 280, "n_test": 120, "n_complete": 158, "missing": {"age": 9, "bp": 12, "sg": 47, "al": 46, "su": 49, "rbc": 152, "pc": 65, "pcc": 4, "ba": 4, "bgr": 44, "bu": 19, "sc": 17, "sod": 87, "pot": 88, "hemo": 52, "pcv": 71, "wbcc": 106, "rbcc": 131, "htn": 2, "dm": 2, "cad": 2, "appet": 1, "pe": 1, "ane": 1}, "ranges": {"age": [2.0, 90.0], "bp": [50.0, 180.0], "sg": [1.005, 1.025], "al": [0.0, 5.0], "su": [0.0, 5.0], "bgr": [22.0, 490.0], "bu": [1.5, 391.0], "sc": [0.4, 76.0], "sod": [110.0, 165.0], "pot": [2.5, 8.0], "hemo": [3.1, 17.8], "pcv": [9.0, 54.0], "wbcc": [2200.0, 26400.0], "rbcc": [2.1, 8.0]}}, "examples": [{"x": {"age": 71.0, "bp": 60.0, "sg": 1.015, "al": 4.0, "su": 0.0, "rbc": 0.0, "pc": 0.0, "pcc": 0.0, "ba": 0.0, "bgr": 118.0, "bu": 125.0, "sc": 5.3, "sod": 136.0, "pot": 4.9, "hemo": 11.4, "pcv": 35.0, "wbcc": 15200.0, "rbcc": 4.3, "htn": 1.0, "dm": 1.0, "cad": 0.0, "appet": 1.0, "pe": 1.0, "ane": 0.0}, "miss": [], "y": 1}, {"x": {"age": 34.0, "bp": 70.0, "sg": 1.025, "al": 0.0, "su": 0.0, "rbc": 0.0, "pc": 0.0, "pcc": 0.0, "ba": 0.0, "bgr": 87.0, "bu": 38.0, "sc": 0.5, "sod": 144.0, "pot": 4.8, "hemo": 17.1, "pcv": 47.0, "wbcc": 7400.0, "rbcc": 6.1, "htn": 0.0, "dm": 0.0, "cad": 0.0, "appet": 0.0, "pe": 0.0, "ane": 0.0}, "miss": [], "y": 0}, {"x": {"age": 61.0, "bp": 80.0, "sg": 1.015, "al": 0.0, "su": 4.0, "rbc": 0.0, "pc": 0.0, "pcc": 0.0, "ba": 0.0, "bgr": 360.0, "bu": 19.0, "sc": 0.7, "sod": 137.0, "pot": 4.4, "hemo": 15.2, "pcv": 44.0, "wbcc": 8300.0, "rbcc": 5.2, "htn": 1.0, "dm": 1.0, "cad": 0.0, "appet": 0.0, "pe": 0.0, "ane": 0.0}, "miss": ["rbc"], "y": 1}, {"x": {"age": 56.0, "bp": 70.0, "sg": 1.015, "al": 4.0, "su": 1.0, "rbc": 1.0, "pc": 0.0, "pcc": 0.0, "ba": 0.0, "bgr": 210.0, "bu": 26.0, "sc": 1.7, "sod": 136.0, "pot": 3.8, "hemo": 16.1, "pcv": 52.0, "wbcc": 12500.0, "rbcc": 5.6, "htn": 0.0, "dm": 0.0, "cad": 0.0, "appet": 0.0, "pe": 0.0, "ane": 0.0}, "miss": [], "y": 1}, {"x": {"age": 30.0, "bp": 80.0, "sg": 1.025, "al": 0.0, "su": 0.0, "rbc": 0.0, "pc": 0.0, "pcc": 0.0, "ba": 0.0, "bgr": 96.0, "bu": 25.0, "sc": 0.5, "sod": 144.0, "pot": 4.8, "hemo": 13.8, "pcv": 42.0, "wbcc": 9000.0, "rbcc": 4.5, "htn": 0.0, "dm": 0.0, "cad": 0.0, "appet": 0.0, "pe": 0.0, "ane": 0.0}, "miss": [], "y": 0}, {"x": {"age": 17.0, "bp": 60.0, "sg": 1.01, "al": 0.0, "su": 0.0, "rbc": 0.0, "pc": 0.0, "pcc": 0.0, "ba": 0.0, "bgr": 92.0, "bu": 32.0, "sc": 2.1, "sod": 141.0, "pot": 4.2, "hemo": 13.9, "pcv": 52.0, "wbcc": 7000.0, "rbcc": 4.8, "htn": 0.0, "dm": 0.0, "cad": 0.0, "appet": 0.0, "pe": 0.0, "ane": 0.0}, "miss": ["rbc", "rbcc"], "y": 1}], "ranges": {"age": [2.0, 90.0], "bp": [50.0, 180.0], "sg": [1.005, 1.025], "al": [0.0, 5.0], "su": [0.0, 5.0], "bgr": [22.0, 490.0], "bu": [1.5, 391.0], "sc": [0.4, 76.0], "sod": [110.0, 165.0], "pot": [2.5, 8.0], "hemo": [3.1, 17.8], "pcv": [9.0, 54.0], "wbcc": [2200.0, 26400.0], "rbcc": [2.1, 8.0]}};
+const BIN = (no,yes)=>[[0,no],[1,yes]];
+const F = {
+  age:{g:'g1',t:'range',l:'Idade',u:'anos',step:1},
+  bp:{g:'g1',t:'range',l:'Pressão arterial',u:'mmHg',step:5},
+  htn:{g:'g1',t:'seg',l:'Hipertensão',o:BIN('Não','Sim')},
+  dm:{g:'g1',t:'seg',l:'Diabetes',o:BIN('Não','Sim')},
+  cad:{g:'g1',t:'seg',l:'Doença coronariana',o:BIN('Não','Sim')},
+  appet:{g:'g1',t:'seg',l:'Apetite',o:BIN('Bom','Ruim')},
+  pe:{g:'g1',t:'seg',l:'Inchaço nos pés',o:BIN('Não','Sim')},
+  ane:{g:'g1',t:'seg',l:'Anemia',o:BIN('Não','Sim')},
+  bgr:{g:'g2',t:'range',l:'Glicemia (sem jejum)',u:'mg/dL',step:1},
+  hemo:{g:'g2',t:'range',l:'Hemoglobina',u:'g/dL',step:0.1,d:1},
+  pcv:{g:'g2',t:'range',l:'Hematócrito',u:'%',step:1},
+  wbcc:{g:'g2',t:'range',l:'Leucócitos',u:'/mm³',step:100},
+  rbcc:{g:'g2',t:'range',l:'Hemácias',u:'milhões/mm³',step:0.1,d:1},
+  bu:{g:'g3',t:'range',l:'Ureia',u:'mg/dL',step:1},
+  sc:{g:'g3',t:'range',l:'Creatinina',u:'mg/dL',step:0.1,d:1},
+  sod:{g:'g3',t:'range',l:'Sódio',u:'mEq/L',step:1},
+  pot:{g:'g3',t:'range',l:'Potássio',u:'mEq/L',step:0.1,d:1},
+  sg:{g:'g4',t:'select',l:'Densidade urinária',o:[[1.005,'1,005'],[1.010,'1,010'],[1.015,'1,015'],[1.020,'1,020'],[1.025,'1,025']]},
+  al:{g:'g4',t:'select',l:'Albumina na urina (0 a 5)',o:[0,1,2,3,4,5].map(v=>[v,String(v)])},
+  su:{g:'g4',t:'select',l:'Açúcar na urina (0 a 5)',o:[0,1,2,3,4,5].map(v=>[v,String(v)])},
+  rbc:{g:'g4',t:'seg',l:'Hemácias na urina',o:BIN('Normal','Alterado')},
+  pc:{g:'g4',t:'seg',l:'Piócitos na urina',o:BIN('Normal','Alterado')},
+  pcc:{g:'g4',t:'seg',l:'Grumos de piócitos',o:BIN('Ausentes','Presentes')},
+  ba:{g:'g4',t:'seg',l:'Bactérias na urina',o:BIN('Ausentes','Presentes')}
+};
+const SHORT={age:'Idade',bp:'Pressão arterial',htn:'Hipertensão',dm:'Diabetes',cad:'Doença coronariana',appet:'Apetite',pe:'Inchaço nos pés',ane:'Anemia',bgr:'Glicemia',hemo:'Hemoglobina',pcv:'Hematócrito',wbcc:'Leucócitos',rbcc:'Hemácias',bu:'Ureia',sc:'Creatinina',sod:'Sódio',pot:'Potássio',sg:'Densidade urinária',al:'Albumina na urina',su:'Açúcar na urina',rbc:'Hemácias na urina',pc:'Piócitos',pcc:'Grumos de piócitos',ba:'Bactérias'};
+const caseNames=['Paciente A','Paciente B','Paciente C','Paciente D','Paciente E','Paciente F'];
+let x={...D.examples[0].x}, missing=new Set(D.examples[0].miss), thr=0.5, model='completo';
+const fmt=(v,d=1)=>v.toFixed(d).replace('.',',');
+function build(){
+  Object.entries(F).forEach(([k,f])=>{
+    const d=document.createElement('div'); d.className='f'; d.id='w_'+k;
+    const lab=`${f.l}<span class="tag" id="t_${k}" hidden>estimado</span>`;
+    if(f.t==='range'){
+      const [mn,mx]=D.ranges[k];
+      d.innerHTML=`<label for="i_${k}">${lab}</label><output id="o_${k}"></output><input type="range" id="i_${k}" min="${mn}" max="${mx}" step="${f.step}">`;
+      d.querySelector('input').addEventListener('input',e=>{x[k]=+e.target.value;missing.delete(k);manual()});
+    } else if(f.t==='select'){
+      d.innerHTML=`<label for="i_${k}">${lab}</label><span></span><select id="i_${k}">${f.o.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select>`;
+      d.querySelector('select').addEventListener('change',e=>{x[k]=+e.target.value;missing.delete(k);manual()});
+    } else {
+      d.innerHTML=`<label id="l_${k}">${lab}</label><span></span><div class="seg" role="group" aria-labelledby="l_${k}">${f.o.map(([v,t])=>`<button type="button" id="i_${k}_${v}" data-v="${v}">${t}</button>`).join('')}</div>`;
+      d.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{x[k]=+b.dataset.v;missing.delete(k);manual()}));
+    }
+    document.getElementById(f.g).appendChild(d);
+  });
+}
+function syncInputs(){
+  const used=new Set(D.models[model].vars);
+  Object.entries(F).forEach(([k,f])=>{
+    document.getElementById('w_'+k).classList.toggle('off',!used.has(k));
+    document.getElementById('t_'+k).hidden=!missing.has(k);
+    if(f.t==='range'){document.getElementById('i_'+k).value=x[k];document.getElementById('o_'+k).textContent=(f.d?fmt(x[k],f.d):Math.round(x[k]).toLocaleString('pt-BR'))+' '+f.u;}
+    else if(f.t==='select'){const s=document.getElementById('i_'+k);s.value=[...s.options].find(o=>Math.abs(+o.value-x[k])<1e-6)?.value??s.value;}
+    else f.o.forEach(([v])=>document.getElementById(`i_${k}_${v}`).setAttribute('aria-pressed',Math.round(x[k])===v));
+  });
+  ['completo','triagem'].forEach(m=>document.getElementById('m_'+m).setAttribute('aria-pressed',m===model));
+}
+const cases=document.getElementById('cases');
+function setPressed(k){[...cases.children].forEach((b,j)=>b.setAttribute('aria-pressed',j===k))}
+function manual(){setPressed(-1);document.getElementById('caseinfo').textContent='Dados alterados manualmente.';update()}
+function load(k){
+  const e=D.examples[k]; x={...e.x}; missing=new Set(e.miss); setPressed(k);
+  const n=e.miss.length;
+  document.getElementById('caseinfo').textContent=`${caseNames[k]}, do conjunto de teste. Diagnóstico confirmado: ${e.y?'com doença renal crônica':'sem doença renal crônica'}.`+(n?` ${n} ${n>1?'dados estavam ausentes e foram estimados':'dado estava ausente e foi estimado'}.`:' Prontuário completo.');
+  update();
+}
+function predict(m,v){
+  const M=D.models[m]; let z=M.intercept; const c={};
+  M.vars.forEach(k=>{const t=M.coef[k]*(v[k]-M.mean[k])/M.scale[k]; c[k]=t; z+=t;});
+  return {p:1/(1+Math.exp(-z)),c};
+}
+function update(){
+  syncInputs();
+  const {p,c}=predict(model,x); const pos=p>=thr;
+  document.getElementById('prob').textContent=fmt(p*100)+'%';
+  document.getElementById('verdict').className='verdict '+(pos?'m':'b');
+  document.getElementById('vtext').textContent=pos
+    ? (model==='triagem'?'Risco elevado. Solicitar creatinina, ureia e exame de urina para confirmar.':'Padrão compatível com doença renal crônica. Encaminhar para avaliação médica e estadiamento.')
+    : 'Padrão de baixo risco para doença renal crônica. Manter acompanhamento conforme protocolo.';
+  document.getElementById('needle').style.left=(p*100)+'%';
+  const other=model==='completo'?'triagem':'completo'; const po=predict(other,x).p;
+  document.getElementById('compare').innerHTML=`Modelo ${other==='completo'?'completo':'de triagem'} para o mesmo paciente: <b>${fmt(po*100)}%</b>`;
+  const box=document.getElementById('contrib'); box.innerHTML='';
+  const ent=Object.entries(c).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,10);
+  const max=Math.max(2,...ent.map(e=>Math.abs(e[1])));
+  ent.forEach(([k,v])=>{
+    const w=Math.abs(v)/max*50; const r=document.createElement('div'); r.className='crow';
+    r.innerHTML=`<span>${SHORT[k]}</span><span class="ctrack"><span class="cbar" style="left:${v>=0?50:50-w}%;width:${w}%;background:var(${v>=0?'--risk':'--ok'})"></span></span><span class="cval">${(v>=0?'+':'')+fmt(v,2)}</span>`;
+    box.appendChild(r);
+  });
+  perf();
+}
+function perf(){
+  const M=D.models[model], mt=M.metrics, T=M.test;
+  let tp=0,tn=0,fp=0,fn=0; T.forEach(([p,y])=>{const pr=p>=thr; if(pr&&y)tp++;else if(pr&&!y)fp++;else if(!pr&&y)fn++;else tn++;});
+  const pc=v=>isFinite(v)?fmt(v*100)+'%':'–';
+  const mb=document.getElementById('metrics'); mb.innerHTML='';
+  [['Acurácia',(tp+tn)/T.length],['Sensibilidade',tp/(tp+fn)],['Especificidade',tn/(tn+fp)],['Valor preditivo positivo',tp/(tp+fp)]].forEach(([l,v])=>{const d=document.createElement('div');d.className='m';d.innerHTML=`<b>${pc(v)}</b><span>${l}</span>`;mb.appendChild(d)});
+  const a=document.createElement('div');a.className='m';a.innerHTML=`<b>${fmt(mt.auc,3)}</b><span>AUC-ROC (não depende do limiar)</span>`;mb.appendChild(a);
+  Object.entries({tp,tn,fp,fn}).forEach(([k,v])=>document.getElementById(k).textContent=v);
+  document.getElementById('thrval').textContent=Math.round(thr*100)+'%';
+  document.getElementById('thrlab').textContent='limiar '+Math.round(thr*100)+'%';
+  document.getElementById('zb').style.width=(thr*100)+'%';
+  document.getElementById('zr').style.width=(100-thr*100)+'%';
+  const meta=D.meta;
+  document.getElementById('perfnote').textContent=`Modelo ${model==='completo'?'completo (24 dados)':'de triagem (13 dados)'}. Base com ${meta.n} pacientes (${meta.n_ckd} com DRC). Treino com ${meta.n_train} pacientes (70%) e avaliação em ${meta.n_test} pacientes nunca vistos pelo modelo (30%). Só ${meta.n_complete} pacientes tinham todos os dados; os ausentes foram estimados.`;
+  document.getElementById('cvnote').textContent=`Validação cruzada de 5 partes no treino: AUC ${fmt(mt.cv_auc_mean,3)} ± ${fmt(mt.cv_auc_std,3)}. Com o limiar de 50%, o modelo deixa passar ${mt.fn} dos ${mt.tp+mt.fn} doentes do teste e gera ${mt.fp} alarmes falsos.`;
+}
+document.getElementById('thr').addEventListener('input',e=>{thr=e.target.value/100;update()});
+['completo','triagem'].forEach(m=>document.getElementById('m_'+m).addEventListener('click',()=>{model=m;update()}));
+build();
+D.examples.forEach((ex,k)=>{const b=document.createElement('button');b.type='button';b.textContent=caseNames[k];b.addEventListener('click',()=>load(k));cases.appendChild(b)});
+load(0);
+</script>
+
+</body>
+</html>
