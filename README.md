@@ -31,6 +31,7 @@ A página também permite ajustar o limiar de decisão e ver, em tempo real, com
 
 - `index.html`: o protótipo interativo (funciona sozinho, sem servidor)
 - `treino_renal.py`: código que treina os dois modelos e gera os pesos
+- `relatorio.html`: relatório com o resultado dos dois modelos para todos os 400 pacientes da base indiana e os 200 de Bangladesh (validação externa), com filtros por grupo, diagnóstico e erros
 
 Para reproduzir o treino, baixe a base no link acima, extraia o arquivo `chronic_kidney_disease_full.arff` e rode:
 
